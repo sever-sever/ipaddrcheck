@@ -546,7 +546,10 @@ int is_ipv4_range(char* range_str, int prefix_length, int verbose)
            If the regex check succeeded, we know the hyphen is there. */
         split_range(range_str, left, right);
 
-        if( !is_ipv4_single(left) )
+        CIDR* left_addr = cidr_from_str(left);
+        CIDR* right_addr = cidr_from_str(right);
+
+        if( !(is_ipv4_single(left) && is_valid_address(left_addr)) )
         {
             if( verbose )
             {
@@ -554,7 +557,7 @@ int is_ipv4_range(char* range_str, int prefix_length, int verbose)
             }
             result = RESULT_FAILURE;
         }
-        else if( !is_ipv4_single(right) )
+        else if( !(is_ipv4_single(right) && is_valid_address(right_addr)) )
         {
             if( verbose )
             {
@@ -564,8 +567,6 @@ int is_ipv4_range(char* range_str, int prefix_length, int verbose)
         }
         else
         {
-            CIDR* left_addr = cidr_from_str(left);
-            CIDR* right_addr = cidr_from_str(right);
             struct in_addr* left_in_addr = cidr_to_inaddr(left_addr, NULL);
             struct in_addr* right_in_addr = cidr_to_inaddr(right_addr, NULL);
 
@@ -608,9 +609,9 @@ int is_ipv4_range(char* range_str, int prefix_length, int verbose)
                 result = RESULT_FAILURE;
             }
 
-            cidr_free(left_addr);
-            cidr_free(right_addr);
         }
+        cidr_free(left_addr);
+        cidr_free(right_addr);
     }
 
     return(result);
@@ -644,7 +645,11 @@ int is_ipv6_range(char* range_str, int prefix_length, int verbose)
            If the regex check succeeded, we know the hyphen is there. */
         split_range(range_str, left, right);
 
-        if( !is_ipv6_single(left) )
+        CIDR* left_addr = cidr_from_str(left);
+        CIDR* right_addr = cidr_from_str(right);
+
+        if( !(is_ipv6_single(left) &&
+              is_valid_address(left_addr) && !duplicate_double_colons(left)) )
         {
             if( verbose )
             {
@@ -652,7 +657,8 @@ int is_ipv6_range(char* range_str, int prefix_length, int verbose)
             }
             result = RESULT_FAILURE;
         }
-        else if( !is_ipv6_single(right) )
+        else if( !(is_ipv6_single(right) &&
+                   is_valid_address(right_addr) && !duplicate_double_colons(right)) )
         {
             if( verbose )
             {
@@ -662,8 +668,6 @@ int is_ipv6_range(char* range_str, int prefix_length, int verbose)
         }
         else
         {
-            CIDR* left_addr = cidr_from_str(left);
-            CIDR* right_addr = cidr_from_str(right);
             struct in6_addr* left_in6_addr = cidr_to_in6addr(left_addr, NULL);
             struct in6_addr* right_in6_addr = cidr_to_in6addr(right_addr, NULL);
 
@@ -705,10 +709,9 @@ int is_ipv6_range(char* range_str, int prefix_length, int verbose)
                 }
                 result = RESULT_FAILURE;
             }
-
-            cidr_free(left_addr);
-            cidr_free(right_addr);
         }
+        cidr_free(left_addr);
+        cidr_free(right_addr);
     }
 
     return(result);
